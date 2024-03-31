@@ -12,12 +12,6 @@
           nixpkgs-fmt
 
           dhall-json
-
-          (pkgs.python3.withPackages (p: with p;[
-            openai
-            telethon
-            pandas
-          ]))
         ];
       };
     };

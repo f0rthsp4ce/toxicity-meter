@@ -1,0 +1,9 @@
+prefix: .venv
+channels:
+  - conda-forge
+dependencies:
+  - python
+  - conda
+  - ipykernel
+  - pandas
+  - tqdm
