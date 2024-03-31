@@ -2,8 +2,10 @@ import asyncio
 from datetime import datetime
 import os
 import json
+import csv
 import telethon
 import telethon.sessions
+from tqdm.asyncio import tqdm
 
 
 class App:
@@ -33,14 +35,26 @@ class App:
 async def amain():
     async with App() as app:
         for chat in app.settings["download"]["from_chats"]:
-            async for msg in app.tg.iter_messages(
-                chat,
-                offset_date=app.settings["download"]["from_date"],
-                reverse=True,
-                limit=1,
-            ):
-                if msg.message:
-                    print(f"{msg.from_id.user_id} at {msg.date}: {msg.message}")
+            with open(f"{chat}.csv", "w") as f_:
+                f = csv.DictWriter(f_, fieldnames=["from_id", "date", "message"])
+                f.writeheader()
+
+                async for msg in tqdm(
+                    app.tg.iter_messages(
+                        chat,
+                        offset_date=app.settings["download"]["from_date"],
+                        reverse=True,
+                    )
+                ):
+                    if msg.message:
+                        # print(f"{msg.from_id.user_id} at {msg.date}: {msg.message}")
+                        f.writerow(
+                            {
+                                "from_id": msg.from_id.user_id,
+                                "date": msg.date.isoformat(),
+                                "message": msg.message,
+                            }
+                        )
 
 
 def main():
