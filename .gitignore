@@ -3,3 +3,4 @@
 *.dhall
 *.json
 *.csv
+*.parquet

@@ -7,3 +7,6 @@ dependencies:
   - ipykernel
   - pandas
   - tqdm
+  - transformers
+  - pip:
+    - detoxify
