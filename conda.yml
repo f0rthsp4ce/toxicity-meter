@@ -3,10 +3,14 @@ channels:
   - conda-forge
 dependencies:
   - python
-  - conda
+  - conda # VSCode compat
+  - micromamba # CLI use
+  - pip
   - ipykernel
+  - python-dotenv
   - pandas
   - tqdm
   - transformers
   - pip:
+    - telethon
     - detoxify
