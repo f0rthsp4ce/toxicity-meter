@@ -1,6 +1,9 @@
 /.direnv
+/.venv
+/.cache
 .env
 *.dhall
 *.json
+!.devcontainer
 *.csv
 *.parquet
