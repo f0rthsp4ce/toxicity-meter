@@ -1,7 +1,7 @@
-.PHONY: download bot
+.PHONY: telegram-download bot
 
-download: settings.json .venv
-	python download.py
+telegram-download: settings.json .venv
+	python telegram-download.py
 
 bot: .venv
 	python tg-bot.py
