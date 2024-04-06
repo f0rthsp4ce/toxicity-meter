@@ -28,7 +28,31 @@ async def amain():
         )
         async def h(event):
             score = toxicity_clf.predict(event.raw_text)["toxicity"]
-            if score >= 0.8:
+            if score >= 0.70:
+                await tg(
+                    telethon.tl.functions.messages.SendReactionRequest(
+                        peer=event.peer_id,
+                        msg_id=event.id,
+                        reaction=[
+                            telethon.types.ReactionCustomEmoji(
+                                5406748567303900401
+                            )  # https://t.me/addemoji/BeBrilliant
+                        ],
+                    )
+                )
+            if score >= 0.84:
+                await tg(
+                    telethon.tl.functions.messages.SendReactionRequest(
+                        peer=event.peer_id,
+                        msg_id=event.id,
+                        reaction=[
+                            telethon.types.ReactionCustomEmoji(
+                                5407118673225730467
+                            )  # https://t.me/addemoji/BeBrilliant
+                        ],
+                    )
+                )
+            if score >= 0.98:
                 await tg(
                     telethon.tl.functions.messages.SendReactionRequest(
                         peer=event.peer_id,
