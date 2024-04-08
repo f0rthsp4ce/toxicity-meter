@@ -3,6 +3,7 @@ import os
 import logging
 import telethon
 import telethon.sessions
+import transformers
 import torch
 import json
 from detoxify import Detoxify
@@ -13,6 +14,17 @@ async def amain():
 
     assert torch.cuda.is_available()
     toxicity_clf = Detoxify("multilingual", device="cuda")
+
+    sentiment_clf = transformers.pipeline(
+        model="blanchefort/rubert-base-cased-sentiment", device="cuda"
+    )
+
+    def negative_predict(x) -> float:
+        return next(
+            row["score"]
+            for row in sentiment_clf(x, top_k=None, truncation=True)
+            if row["label"] == "NEGATIVE"
+        )
 
     async with telethon.TelegramClient(
         telethon.sessions.StringSession(os.environ["TELEGRAM_SESSION_TELETHON"]),
@@ -27,8 +39,10 @@ async def amain():
             )
         )
         async def h(event):
-            score = toxicity_clf.predict(event.raw_text)["toxicity"]
-            if score >= 0.70:
+            toxicity = toxicity_clf.predict(event.raw_text)["toxicity"]
+            negativity = negative_predict(event.raw_text)
+
+            if toxicity >= 0.70:
                 await tg(
                     telethon.tl.functions.messages.SendReactionRequest(
                         peer=event.peer_id,
@@ -40,7 +54,7 @@ async def amain():
                         ],
                     )
                 )
-            if score >= 0.84:
+            if toxicity >= 0.84:
                 await tg(
                     telethon.tl.functions.messages.SendReactionRequest(
                         peer=event.peer_id,
@@ -52,7 +66,7 @@ async def amain():
                         ],
                     )
                 )
-            if score >= 0.98:
+            if toxicity >= 0.98:
                 await tg(
                     telethon.tl.functions.messages.SendReactionRequest(
                         peer=event.peer_id,
@@ -62,6 +76,14 @@ async def amain():
                                 5406772623415720314
                             )  # https://t.me/addemoji/BeBrilliant
                         ],
+                    )
+                )
+            if negativity >= 0.7:
+                await tg(
+                    telethon.tl.functions.messages.SendReactionRequest(
+                        peer=event.peer_id,
+                        msg_id=event.id,
+                        reaction=[telethon.types.ReactionEmoji("😢")],
                     )
                 )
 
