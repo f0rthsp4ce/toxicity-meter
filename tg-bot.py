@@ -62,8 +62,8 @@ async def amain():
                         5406772623415720314
                     )  # https://t.me/addemoji/BeBrilliant
                 )
-            if negativity >= 0.9:
-                reactions.append(telethon.types.ReactionEmoji("😢"))
+            #if negativity >= 0.9:
+            #    reactions.append(telethon.types.ReactionEmoji("😢"))
 
             if reactions:
                 await tg(
