@@ -22,7 +22,7 @@ async def amain():
     def negative_predict(x) -> float:
         return next(
             row["score"]
-            for row in sentiment_clf(x, top_k=None, truncation=True)
+            for row in sentiment_clf(x, top_k=None)
             if row["label"] == "NEGATIVE"
         )
 
@@ -42,48 +42,35 @@ async def amain():
             toxicity = toxicity_clf.predict(event.raw_text)["toxicity"]
             negativity = negative_predict(event.raw_text)
 
-            if toxicity >= 0.70:
-                await tg(
-                    telethon.tl.functions.messages.SendReactionRequest(
-                        peer=event.peer_id,
-                        msg_id=event.id,
-                        reaction=[
-                            telethon.types.ReactionCustomEmoji(
-                                5406748567303900401
-                            )  # https://t.me/addemoji/BeBrilliant
-                        ],
-                    )
+            reactions = []
+
+            if toxicity >= 0.60:
+                reactions.append(
+                    telethon.types.ReactionCustomEmoji(
+                        5406748567303900401
+                    )  # https://t.me/addemoji/BeBrilliant
                 )
-            if toxicity >= 0.84:
-                await tg(
-                    telethon.tl.functions.messages.SendReactionRequest(
-                        peer=event.peer_id,
-                        msg_id=event.id,
-                        reaction=[
-                            telethon.types.ReactionCustomEmoji(
-                                5407118673225730467
-                            )  # https://t.me/addemoji/BeBrilliant
-                        ],
-                    )
+            if toxicity >= 0.8:
+                reactions.append(
+                    telethon.types.ReactionCustomEmoji(
+                        5407118673225730467
+                    )  # https://t.me/addemoji/BeBrilliant
                 )
             if toxicity >= 0.98:
-                await tg(
-                    telethon.tl.functions.messages.SendReactionRequest(
-                        peer=event.peer_id,
-                        msg_id=event.id,
-                        reaction=[
-                            telethon.types.ReactionCustomEmoji(
-                                5406772623415720314
-                            )  # https://t.me/addemoji/BeBrilliant
-                        ],
-                    )
+                reactions.append(
+                    telethon.types.ReactionCustomEmoji(
+                        5406772623415720314
+                    )  # https://t.me/addemoji/BeBrilliant
                 )
-            if negativity >= 0.7:
+            if negativity >= 0.9:
+                reactions.append(telethon.types.ReactionEmoji("😢"))
+
+            if reactions:
                 await tg(
                     telethon.tl.functions.messages.SendReactionRequest(
                         peer=event.peer_id,
                         msg_id=event.id,
-                        reaction=[telethon.types.ReactionEmoji("😢")],
+                        reaction=reactions[:3],
                     )
                 )
 

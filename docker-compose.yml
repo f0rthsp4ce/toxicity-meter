@@ -1,0 +1,20 @@
+services:
+  toxicity-bot:
+    image: toxicity-bot
+    env_file:
+      - .env
+    volumes:
+      - type: bind
+        source: ./settings.json
+        target: /home/nonroot/settings.json
+        read_only: true
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [ gpu ]
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
