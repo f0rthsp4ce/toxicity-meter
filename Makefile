@@ -1,13 +1,11 @@
-.PHONY: telegram-download build-bot bot
+.PHONY: telegram-download deploy
+
+deploy: settings.json
+	docker buildx build . -f tg-bot.Dockerfile -q -t toxicity-bot
+	docker compose up -d
 
 telegram-download: settings.json .venv
 	python telegram-download.py
-
-build-bot:
-	docker buildx build . -f tg-bot.Dockerfile -q -t toxicity-bot
-
-run-bot:
-	docker run --mount type=bind,source=$(pwd)/settings.json,target=/home/nonroot/settings.json,ro --env-file=.env --gpus all --rm -it toxicity-bot
 
 .venv: conda.yml
 	@if [ -d $@ ]; then \

@@ -1,4 +1,6 @@
 import asyncio
+from dataclasses import dataclass
+import datetime
 import os
 import logging
 import telethon
@@ -7,6 +9,12 @@ import transformers
 import torch
 import json
 from detoxify import Detoxify
+
+
+@dataclass
+class State:
+    last_message_at: dict[int, datetime.datetime]
+    lock: asyncio.Lock
 
 
 async def amain():
@@ -26,6 +34,8 @@ async def amain():
             if row["label"] == "NEGATIVE"
         )
 
+    state = State(last_message_at={}, lock=asyncio.Lock())
+
     async with telethon.TelegramClient(
         telethon.sessions.StringSession(os.environ["TELEGRAM_SESSION_TELETHON"]),
         int(os.environ["TELEGRAM_API_ID"]),
@@ -34,11 +44,9 @@ async def amain():
     ) as tg:
 
         @tg.on(
-            telethon.events.NewMessage(
-                chats=config["bot"]["monitor-chats"], incoming=True
-            )
+            telethon.events.NewMessage(chats=config["bot"]["toxicity"]["monitor-chats"])
         )
-        async def h(event):
+        async def set_diamonds(event):
             toxicity = toxicity_clf.predict(event.raw_text)["toxicity"]
             negativity = negative_predict(event.raw_text)
 
@@ -62,7 +70,7 @@ async def amain():
                         5406772623415720314
                     )  # https://t.me/addemoji/BeBrilliant
                 )
-            #if negativity >= 0.9:
+            # if negativity >= 0.9:
             #    reactions.append(telethon.types.ReactionEmoji("😢"))
 
             if reactions:
@@ -73,6 +81,24 @@ async def amain():
                         reaction=reactions[:3],
                     )
                 )
+
+        @tg.on(
+            telethon.events.NewMessage(chats=config["bot"]["slowmode"]["monitor-chats"])
+        )
+        async def slow_mode(event):
+            now = datetime.datetime.now()
+
+            # bounce the message back to the sender
+            if event.sender_id in state.last_message_at and now - state.last_message_at[
+                event.sender_id
+            ] < datetime.timedelta(seconds=30):
+                await tg.forward_messages(event.sender_id, event.id, event.chat_id)
+                await tg.delete_messages(event.chat_id, event.id)
+                return
+
+            # update the last message time
+            async with state.lock:
+                state.last_message_at[event.sender_id] = now
 
         await asyncio.Event().wait()
 
